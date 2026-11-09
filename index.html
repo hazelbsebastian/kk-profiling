@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Barangay Bantug KK Profiling</title>
+  <meta name="description" content="Katipunan ng Kabataan (KK) Profiling registration for the youth of Barangay Bantug.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- ============ LANDING PAGE ============ -->
+  <main id="view-home" class="view">
+    <section class="card header-card">
+      <p class="eyebrow">Sangguniang Kabataan</p>
+      <h1>Barangay Bantug's KK Profiling</h1>
+      <p class="lead">
+        Katipunan ng Kabataan (KK) Profiling for all youth aged 15 to 30 living in Barangay Bantug.
+        Register your profile so the SK can plan programs and services for you.
+      </p>
+      <button class="btn btn-primary" data-go="form">Register now</button>
+    </section>
+
+    <section class="card">
+      <div class="list-head">
+        <h2>KK Masterlist</h2>
+        <span id="list-count" class="pill">–</span>
+      </div>
+      <p class="muted small">Only names and puroks are shown to protect everyone's privacy.</p>
+      <div class="filters">
+        <input id="list-search" type="search" placeholder="Search name…" aria-label="Search name">
+        <select id="list-purok" aria-label="Filter by purok">
+          <option value="">All puroks</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Name</th><th>Purok</th></tr></thead>
+          <tbody id="list-body"><tr><td colspan="3" class="muted">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+    <p class="footer">Barangay Bantug · Sangguniang Kabataan</p>
+  </main>
+
+  <!-- ============ REGISTRATION FORM ============ -->
+  <main id="view-form" class="view" hidden>
+    <section class="card header-card">
+      <h1>KK Profile Registration</h1>
+      <p class="lead">Barangay Bantug Katipunan ng Kabataan</p>
+      <p class="required-note">* Required</p>
+    </section>
+
+    <form id="reg-form" novalidate>
+      <section class="card q">
+        <label class="q-title">Last name <span class="req">*</span></label>
+        <input name="lastName" required maxlength="60" autocomplete="family-name">
+        <p class="err"></p>
+      </section>
+      <section class="card q">
+        <label class="q-title">First name <span class="req">*</span></label>
+        <input name="firstName" required maxlength="60" autocomplete="given-name">
+        <p class="err"></p>
+      </section>
+      <section class="card q">
+        <label class="q-title">Middle name</label>
+        <input name="middleName" maxlength="60" autocomplete="additional-name">
+        <p class="err"></p>
+      </section>
+      <section class="card q">
+        <label class="q-title">Suffix</label>
+        <select name="suffix">
+          <option value="">None</option>
+          <option>Jr.</option><option>Sr.</option>
+          <option>II</option><option>III</option><option>IV</option>
+        </select>
+        <p class="err"></p>
+      </section>
+      <section class="card q">
+        <label class="q-title">Birthday <span class="req">*</span></label>
+        <input name="birthday" type="date" required>
+        <p class="hint" id="age-hint">KK members must be 15 to 30 years old.</p>
+        <p class="err"></p>
+      </section>
+      <section class="card q">
+        <p class="q-title">Sex <span class="req">*</span></p>
+        <div class="choices" data-name="sex">
+          <label><input type="radio" name="sex" value="M" required> Male</label>
+          <label><input type="radio" name="sex" value="F"> Female</label>
+        </div>
+        <p class="err"></p>
+      </section>
+      <section class="card q">
+        <label class="q-title">Contact number</label>
+        <input name="contact" type="tel" inputmode="numeric" placeholder="09XXXXXXXXX" maxlength="11">
+        <p class="err"></p>
+      </section>
+      <section class="card q">
+        <p class="q-title">Civil status <span class="req">*</span></p>
+        <div class="choices">
+          <label><input type="radio" name="civilStatus" value="Single" required> Single</label>
+          <label><input type="radio" name="civilStatus" value="Married"> Married</label>
+          <label><input type="radio" name="civilStatus" value="Live-in"> Live-in</label>
+          <label><input type="radio" name="civilStatus" value="Widowed"> Widowed</label>
+          <label><input type="radio" name="civilStatus" value="Separated"> Separated</label>
+        </div>
+        <p class="err"></p>
+      </section>
+      <section class="card q">
+        <p class="q-title">Youth classification <span class="req">*</span></p>
+        <div class="choices">
+          <label><input type="radio" name="youthClass" value="In-school Youth" required> In-school Youth</label>
+          <label><input type="radio" name="youthClass" value="Out of School Youth"> Out of School Youth</label>
+          <label><input type="radio" name="youthClass" value="Working Youth"> Working Youth</label>
+          <label><input type="radio" name="youthClass" value="Unemployed"> Unemployed</label>
+        </div>
+        <p class="err"></p>
+      </section>
+      <section class="card q">
+        <p class="q-title">Registered voter? <span class="req">*</span></p>
+        <div class="choices">
+          <label><input type="radio" name="voter" value="Yes" required> Yes</label>
+          <label><input type="radio" name="voter" value="No"> No</label>
+        </div>
+        <p class="err"></p>
+      </section>
+      <section class="card q">
+        <label class="q-title">Purok <span class="req">*</span></label>
+        <select name="purok" required id="purok-select">
+          <option value="">Choose</option>
+        </select>
+        <p class="err"></p>
+      </section>
+      <section class="card q">
+        <label class="consent">
+          <input type="checkbox" name="consent" required>
+          <span>I agree that the SK of Barangay Bantug may collect and keep my information for KK Profiling,
+          in line with the Data Privacy Act of 2012 (RA 10173). Only my name and purok will be shown publicly.</span>
+        </label>
+        <p class="err"></p>
+      </section>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" id="submit-btn">Submit</button>
+        <button type="button" class="btn btn-text" data-go="home">Back to home</button>
+      </div>
+      <p id="form-msg" class="form-msg" role="alert" hidden></p>
+    </form>
+  </main>
+
+  <!-- ============ SUCCESS PAGE ============ -->
+  <main id="view-success" class="view" hidden>
+    <section class="card header-card">
+      <div class="check" aria-hidden="true">✓</div>
+      <h1>Registration successful</h1>
+      <p class="lead" id="success-text">You have been registered in Barangay Bantug's KK Profiling.</p>
+      <div class="form-actions">
+        <button class="btn btn-primary" data-go="home">View masterlist</button>
+        <button class="btn btn-text" data-go="form">Register another person</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- toast notification -->
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

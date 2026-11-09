@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>KK Profiling Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- LOGIN -->
+  <main id="login-view" class="view">
+    <section class="card header-card">
+      <p class="eyebrow">SK Admin</p>
+      <h1>Barangay Bantug's KK Profiling</h1>
+      <p class="lead">Sign in to view the full KK profiles.</p>
+      <form id="login-form" class="q">
+        <label class="q-title" for="pw">Admin password</label>
+        <input id="pw" type="password" autocomplete="current-password" required>
+        <p class="err" id="login-err"></p>
+        <div class="form-actions">
+          <button class="btn btn-primary" id="login-btn">Sign in</button>
+          <a class="btn btn-text" href="./">Back to website</a>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <!-- DASHBOARD -->
+  <main id="admin-view" class="view admin-wide" hidden>
+    <section class="card header-card">
+      <div class="list-head">
+        <div>
+          <p class="eyebrow">SK Admin</p>
+          <h1>KK Profiles</h1>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-text" id="refresh-btn">Refresh</button>
+          <button class="btn btn-primary" id="export-btn">Download Excel (CSV)</button>
+          <button class="btn btn-text" id="logout-btn">Sign out</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="stats" id="stats"></section>
+
+    <section class="card">
+      <div class="filters">
+        <input id="f-search" type="search" placeholder="Search name or contact…" aria-label="Search">
+        <select id="f-purok" aria-label="Purok"><option value="">All puroks</option></select>
+        <select id="f-sex" aria-label="Sex"><option value="">All sexes</option><option value="M">Male</option><option value="F">Female</option></select>
+        <select id="f-class" aria-label="Youth classification">
+          <option value="">All classifications</option>
+          <option>In-school Youth</option><option>Out of School Youth</option><option>Working Youth</option><option>Unemployed</option>
+        </select>
+        <select id="f-voter" aria-label="Registered voter"><option value="">Voter: any</option><option>Yes</option><option>No</option></select>
+      </div>
+      <p class="muted small" id="f-count"></p>
+      <div class="table-wrap tall">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>#</th><th data-sort="lastName">Name</th><th data-sort="birthday">Birthday</th><th data-sort="age">Age</th>
+              <th data-sort="sex">Sex</th><th>Contact</th><th data-sort="civilStatus">Civil status</th>
+              <th data-sort="youthClass">Classification</th><th data-sort="voter">Voter</th><th data-sort="purok">Purok</th>
+              <th data-sort="timestamp">Registered</th>
+            </tr>
+          </thead>
+          <tbody id="a-body"></tbody>
+        </table>
+      </div>
+      <p class="muted small">To edit or delete a record, open the Google Sheet. Changes show here after Refresh.</p>
+    </section>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
