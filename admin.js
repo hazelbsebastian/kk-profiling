@@ -3,6 +3,7 @@
   const CFG = window.KK_CONFIG;
   const $ = (s) => document.querySelector(s);
   const PW_KEY = "kk_admin_pw";
+  const CLASSES = ["In-school Youth", "Out of School Youth", "Working Youth", "Unemployed"];
   let rows = [];
   let sortKey = "lastName";
   let sortDir = 1;
@@ -19,10 +20,17 @@
     return res.json();
   }
 
+  function stamp() {
+    $("#updated-at").textContent = "Full records with private details. Updated " +
+      new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) + ".";
+  }
+
   function showDashboard(data) {
     rows = data;
     $("#login-view").hidden = true;
     $("#admin-view").hidden = false;
+    $("#logout-btn").hidden = false;
+    stamp();
     render();
   }
 
@@ -53,6 +61,7 @@
     rows = [];
     $("#a-body").textContent = "";
     $("#admin-view").hidden = true;
+    $("#logout-btn").hidden = true;
     $("#login-view").hidden = false;
   });
 
@@ -64,6 +73,7 @@
       const res = await fetchAdmin(getPw());
       if (!res.ok) throw new Error(res.error);
       rows = res.rows;
+      stamp();
       render();
     } catch (err) {
       alert("Could not refresh: " + err.message);
@@ -90,30 +100,47 @@
       });
   }
 
+  function cell(tr, text, cls) {
+    const td = document.createElement("td");
+    if (cls) {
+      const s = document.createElement("span");
+      s.className = cls;
+      s.textContent = text;
+      td.appendChild(s);
+    } else td.textContent = text;
+    tr.appendChild(td);
+    return td;
+  }
+
   function render() {
     const list = filtered();
     renderStats(list);
+    renderBars(list);
     $("#f-count").textContent = `Showing ${list.length} of ${rows.length} records`;
     const body = $("#a-body");
     body.textContent = "";
     if (!list.length) {
-      body.innerHTML = `<tr><td colspan="11" class="muted">No records found.</td></tr>`;
-      return;
+      body.innerHTML = `<tr><td colspan="11" class="empty">No records found.</td></tr>`;
+    } else {
+      const frag = document.createDocumentFragment();
+      list.forEach((r, i) => {
+        const tr = document.createElement("tr");
+        cell(tr, i + 1).className = "num";
+        cell(tr, fullName(r)).className = "name";
+        cell(tr, r.birthday);
+        cell(tr, r.age);
+        cell(tr, r.sex);
+        cell(tr, r.contact);
+        cell(tr, r.civilStatus);
+        cell(tr, r.youthClass);
+        cell(tr, r.voter, r.voter === "Yes" ? "chip-y" : "chip-n");
+        cell(tr, r.purok ? "Purok " + r.purok : "", "purok-pill");
+        cell(tr, r.timestamp);
+        frag.appendChild(tr);
+      });
+      body.appendChild(frag);
     }
-    const frag = document.createDocumentFragment();
-    list.forEach((r, i) => {
-      const tr = document.createElement("tr");
-      [i + 1, fullName(r), r.birthday, r.age, r.sex, r.contact, r.civilStatus, r.youthClass, r.voter, r.purok, r.timestamp]
-        .forEach((v) => {
-          const td = document.createElement("td");
-          td.textContent = v;
-          tr.appendChild(td);
-        });
-      frag.appendChild(tr);
-    });
-    body.appendChild(frag);
     document.querySelectorAll("th[data-sort]").forEach((th) => {
-      th.classList.toggle("sorted", th.dataset.sort === sortKey);
       th.dataset.dir = th.dataset.sort === sortKey ? (sortDir > 0 ? "▲" : "▼") : "";
     });
   }
@@ -121,25 +148,48 @@
   function renderStats(list) {
     const count = (k, v) => list.filter((r) => r[k] === v).length;
     const tiles = [
-      ["Total", list.length],
-      ["Male", count("sex", "M")],
-      ["Female", count("sex", "F")],
-      ["Registered voters", count("voter", "Yes")],
-      ["In-school", count("youthClass", "In-school Youth")],
-      ["Out of school", count("youthClass", "Out of School Youth")],
-      ["Working", count("youthClass", "Working Youth")],
-      ["Unemployed", count("youthClass", "Unemployed")],
+      ["Total youth", list.length, "t-ink"],
+      ["Male", count("sex", "M"), "t-blue"],
+      ["Female", count("sex", "F"), "t-red"],
+      ["Registered voters", count("voter", "Yes"), "t-yellow"],
+      ["In-school", count("youthClass", "In-school Youth"), ""],
+      ["Out of school", count("youthClass", "Out of School Youth"), ""],
+      ["Working", count("youthClass", "Working Youth"), ""],
+      ["Unemployed", count("youthClass", "Unemployed"), ""],
     ];
     const box = $("#stats");
     box.textContent = "";
-    tiles.forEach(([label, n]) => {
+    tiles.forEach(([label, n, cls]) => {
       const d = document.createElement("div");
-      d.className = "stat card";
-      d.innerHTML = `<span class="stat-n"></span><span class="stat-l"></span>`;
+      d.className = "a-tile " + cls;
+      d.innerHTML = `<b></b><span></span>`;
       d.firstChild.textContent = n;
       d.lastChild.textContent = label;
       box.appendChild(d);
     });
+  }
+
+  function bars(el, items, colors) {
+    const max = Math.max(1, ...items.map((i) => i[1]));
+    el.textContent = "";
+    items.forEach(([label, n], idx) => {
+      const row = document.createElement("div");
+      row.className = "bar";
+      row.innerHTML = `<span></span><div class="bar-track"><i></i></div><b></b>`;
+      row.children[0].textContent = label;
+      const fill = row.children[1].firstChild;
+      fill.style.width = (n / max) * 100 + "%";
+      fill.style.background = colors[idx % colors.length];
+      if (!n) fill.style.borderRight = "0";
+      row.children[2].textContent = n;
+      el.appendChild(row);
+    });
+  }
+
+  function renderBars(list) {
+    const by = (k, v) => list.filter((r) => r[k] === v).length;
+    bars($("#bars-purok"), CFG.PUROKS.map((p) => ["Purok " + p, by("purok", p)]), ["var(--blue)", "var(--red)", "var(--yellow)"]);
+    bars($("#bars-class"), CLASSES.map((c) => [c, by("youthClass", c)]), ["var(--red)", "var(--yellow)", "var(--blue)", "var(--ink)"]);
   }
 
   document.querySelectorAll("th[data-sort]").forEach((th) =>

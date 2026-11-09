@@ -4,6 +4,7 @@
   const DEMO = !CFG.SCRIPT_URL;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  const AGE_HINT = `KK members must be ${CFG.MIN_AGE} to ${CFG.MAX_AGE} years old.`;
 
   // ---------- helpers ----------
   const clean = (s) => String(s || "").replace(/\s+/g, " ").trim();
@@ -36,7 +37,7 @@
   }
 
   // ---------- data layer ----------
-  // Demo mode keeps records in this browser only, so you can try the site before connecting Google Sheets.
+  // Demo mode keeps records in this browser only, so the site can be tried before connecting Google Sheets.
   const demo = {
     load() { try { return JSON.parse(localStorage.getItem("kk_demo") || "[]"); } catch { return []; } },
     save(rows) { try { localStorage.setItem("kk_demo", JSON.stringify(rows)); } catch {} },
@@ -68,11 +69,14 @@
   }
 
   // ---------- views ----------
+  const VIEWS = ["home", "list", "form", "success"];
   function go(view) {
     $$(".view").forEach((v) => (v.hidden = v.id !== "view-" + view));
+    $$("[data-nav]").forEach((a) => a.classList.toggle("active", a.dataset.nav === view));
     window.scrollTo(0, 0);
-    if (view === "home") loadList();
-    if (location.hash !== "#" + view) history.replaceState(null, "", view === "home" ? location.pathname : "#" + view);
+    if (view === "home" || view === "list") loadList();
+    const hash = view === "home" ? "" : "#" + view;
+    if (location.hash !== hash) history.replaceState(null, "", location.pathname + hash);
   }
   document.addEventListener("click", (e) => {
     const b = e.target.closest("[data-go]");
@@ -81,60 +85,95 @@
 
   // ---------- masterlist ----------
   let allRows = [];
+  let purokFilter = "";
+
   async function loadList() {
-    const body = $("#list-body");
     try {
       allRows = await fetchList();
       allRows.sort((a, b) => a.name.localeCompare(b.name));
+      updateTotals();
+      renderChips();
       renderList();
     } catch (err) {
-      body.innerHTML = `<tr><td colspan="3" class="muted">Could not load the masterlist. Please refresh the page.</td></tr>`;
+      $("#list-body").innerHTML = `<tr><td colspan="3" class="empty">Could not load the masterlist. Please refresh the page.</td></tr>`;
+      $("#list-count").textContent = "Offline";
       console.error(err);
     }
   }
+
+  function updateTotals() {
+    $$(".js-total").forEach((el) => (el.textContent = allRows.length.toLocaleString()));
+    $("#st-puroks").textContent = new Set(allRows.map((r) => String(r.purok))).size;
+  }
+
+  function renderChips() {
+    const box = $("#purok-chips");
+    box.textContent = "";
+    const counts = {};
+    allRows.forEach((r) => (counts[r.purok] = (counts[r.purok] || 0) + 1));
+    [["", "All", allRows.length]].concat(CFG.PUROKS.map((p) => [p, "Purok " + p, counts[p] || 0])).forEach(([val, label, n]) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "chip" + (purokFilter === val ? " on" : "");
+      b.setAttribute("aria-pressed", purokFilter === val);
+      b.innerHTML = `<span></span><em></em>`;
+      b.firstChild.textContent = label;
+      b.lastChild.textContent = n;
+      b.addEventListener("click", () => { purokFilter = val; renderChips(); renderList(); });
+      box.appendChild(b);
+    });
+  }
+
   function renderList() {
     const q = $("#list-search").value.trim().toLowerCase();
-    const p = $("#list-purok").value;
-    const rows = allRows.filter((r) => (!p || String(r.purok) === p) && (!q || r.name.toLowerCase().includes(q)));
+    const rows = allRows.filter((r) => (!purokFilter || String(r.purok) === purokFilter) && (!q || r.name.toLowerCase().includes(q)));
     $("#list-count").textContent = `${rows.length} of ${allRows.length} registered`;
     const body = $("#list-body");
     body.textContent = "";
     if (!rows.length) {
-      body.innerHTML = `<tr><td colspan="3" class="muted">${allRows.length ? "No match found." : "No one has registered yet."}</td></tr>`;
+      body.innerHTML = `<tr><td colspan="3" class="empty">${allRows.length ? "No match found." : "No one has registered yet. Be the first!"}</td></tr>`;
       return;
     }
     const frag = document.createDocumentFragment();
     rows.forEach((r, i) => {
       const tr = document.createElement("tr");
-      [i + 1, r.name, r.purok].forEach((v) => {
-        const td = document.createElement("td");
-        td.textContent = v; // textContent keeps user-entered names from running as HTML
-        tr.appendChild(td);
-      });
+      tr.innerHTML = `<td class="num"></td><td class="name"></td><td><span class="purok-pill"></span></td>`;
+      tr.children[0].textContent = i + 1;
+      tr.children[1].textContent = r.name; // textContent keeps user-entered names from running as HTML
+      tr.children[2].firstChild.textContent = "Purok " + r.purok;
       frag.appendChild(tr);
     });
     body.appendChild(frag);
   }
   $("#list-search").addEventListener("input", renderList);
-  $("#list-purok").addEventListener("change", renderList);
 
   // ---------- form ----------
   const form = $("#reg-form");
-  CFG.PUROKS.forEach((p) => {
-    $("#purok-select").add(new Option("Purok " + p, p));
-    $("#list-purok").add(new Option("Purok " + p, p));
-  });
+  CFG.PUROKS.forEach((p) => $("#purok-select").add(new Option("Purok " + p, p)));
 
   const bday = form.birthday;
+  const hint = $("#age-hint");
   const today = new Date();
-  const iso = (d) => d.toISOString().slice(0, 10);
+  const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   bday.max = iso(new Date(today.getFullYear() - CFG.MIN_AGE, today.getMonth(), today.getDate()));
   bday.min = iso(new Date(today.getFullYear() - CFG.MAX_AGE - 1, today.getMonth(), today.getDate() + 1));
   bday.addEventListener("change", () => {
     const a = ageOn(bday.value);
-    $("#age-hint").textContent = isNaN(a) ? "KK members must be 15 to 30 years old." : `Age: ${a} years old`;
+    hint.textContent = isNaN(a) ? AGE_HINT : `Age: ${a} years old`;
+    hint.classList.toggle("ok", !isNaN(a));
   });
   form.contact.addEventListener("input", () => (form.contact.value = form.contact.value.replace(/\D/g, "")));
+
+  // progress bar: share of required answers filled in
+  const REQUIRED = ["lastName", "firstName", "birthday", "sex", "civilStatus", "youthClass", "voter", "purok", "consent"];
+  function updateProgress() {
+    const done = REQUIRED.filter((n) => (n === "consent" ? form.consent.checked : clean(form[n].value))).length;
+    const pct = Math.round((done / REQUIRED.length) * 100);
+    $("#progress-fill").style.width = pct + "%";
+    $("#progress-text").textContent = pct === 100 ? "All set — ready to submit" : `${pct}% complete`;
+  }
+  form.addEventListener("input", updateProgress);
+  form.addEventListener("change", updateProgress);
 
   function setErr(field, msg) {
     const box = (field instanceof RadioNodeList ? field[0] : field).closest(".q");
@@ -151,7 +190,7 @@
     setErr(form.middleName, "");
     setErr(form.suffix, "");
     ["lastName", "firstName", "middleName"].forEach((n) => {
-      if (clean(form[n].value) && !/^[\p{L}\s.'\-ñÑ]+$/u.test(clean(form[n].value))) ok = setErr(form[n], "Use letters only.") && false;
+      if (clean(form[n].value) && !/^[\p{L}\s.'\-]+$/u.test(clean(form[n].value))) ok = setErr(form[n], "Use letters only.") && false;
     });
 
     const a = ageOn(bday.value);
@@ -200,15 +239,17 @@
     try {
       const res = await submitRecord(rec);
       if (res.ok) {
-        const name = `${rec.firstName} ${rec.lastName}`;
-        $("#success-text").textContent = `${name}, you have been registered in Barangay Bantug's KK Profiling.`;
+        $("#success-text").textContent = `${rec.firstName} ${rec.lastName}, you have been registered in Barangay Bantug's KK Profiling. Your name will now appear in the masterlist.`;
         toast("You have been registered!");
         form.reset();
-        $("#age-hint").textContent = "KK members must be 15 to 30 years old.";
+        hint.textContent = AGE_HINT;
+        hint.classList.remove("ok");
+        updateProgress();
         go("success");
       } else if (res.duplicate) {
-        msg.textContent = `${rec.firstName} ${rec.lastName} (born ${rec.birthday}) is already registered. You can find your name in the masterlist.`;
+        msg.textContent = `${rec.firstName} ${rec.lastName} (born ${rec.birthday}) is already registered. You can find the name in the masterlist.`;
         msg.hidden = false;
+        msg.scrollIntoView({ behavior: "smooth", block: "center" });
         toast("This person is already registered.");
       } else {
         throw new Error(res.error || "Unknown error");
@@ -219,12 +260,12 @@
       msg.hidden = false;
     } finally {
       btn.disabled = false;
-      btn.textContent = "Submit";
+      btn.textContent = "Submit registration";
     }
   });
 
   // ---------- start ----------
   if (DEMO) console.info("KK Profiling: DEMO MODE (no SCRIPT_URL in config.js). Data is saved in this browser only.");
   const start = location.hash.slice(1);
-  go(["form", "home"].includes(start) ? start : "home");
+  go(VIEWS.includes(start) && start !== "success" ? start : "home");
 })();

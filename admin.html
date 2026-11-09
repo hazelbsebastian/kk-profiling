@@ -6,74 +6,112 @@
   <meta name="robots" content="noindex">
   <title>KK Profiling Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <header class="nav">
+    <div class="wrap">
+      <a class="brand" href="./">
+        <span class="mark"><i class="m-sq"></i><i class="m-ci"></i></span>
+        <span><b>KK PROFILING</b><small>Barangay Bantug</small></span>
+      </a>
+      <nav>
+        <span class="tag">Admin</span>
+        <a class="nav-link hide-sm" href="./">Public site</a>
+        <button class="btn btn-sm" id="logout-btn" hidden>Sign out</button>
+      </nav>
+    </div>
+  </header>
+
   <!-- LOGIN -->
-  <main id="login-view" class="view">
-    <section class="card header-card">
-      <p class="eyebrow">SK Admin</p>
-      <h1>Barangay Bantug's KK Profiling</h1>
-      <p class="lead">Sign in to view the full KK profiles.</p>
-      <form id="login-form" class="q">
-        <label class="q-title" for="pw">Admin password</label>
-        <input id="pw" type="password" autocomplete="current-password" required>
-        <p class="err" id="login-err"></p>
-        <div class="form-actions">
-          <button class="btn btn-primary" id="login-btn">Sign in</button>
-          <a class="btn btn-text" href="./">Back to website</a>
+  <main id="login-view">
+    <div class="login">
+      <div class="login-card">
+        <div class="login-art" aria-hidden="true">
+          <div class="shape circle-y"></div>
+          <div class="shape square-r"><span class="tri"></span></div>
         </div>
-      </form>
-    </section>
+        <form id="login-form" class="login-form">
+          <p class="kicker"><span class="dot"></span>SK officers only</p>
+          <h1>Admin sign in</h1>
+          <p class="muted">View the full KK profiles, totals and downloads.</p>
+          <section class="q">
+            <label class="q-title" for="pw">Admin password</label>
+            <input id="pw" type="password" autocomplete="current-password" required>
+            <p class="err" id="login-err"></p>
+          </section>
+          <div class="form-actions">
+            <button class="btn btn-red" id="login-btn">Sign in</button>
+            <a class="btn btn-plain" href="./">Back to website</a>
+          </div>
+        </form>
+      </div>
+    </div>
   </main>
 
   <!-- DASHBOARD -->
-  <main id="admin-view" class="view admin-wide" hidden>
-    <section class="card header-card">
-      <div class="list-head">
+  <main id="admin-view" style="padding-bottom:40px" hidden>
+    <section class="page-head ink">
+      <div class="deco"></div>
+      <div class="wrap">
         <div>
-          <p class="eyebrow">SK Admin</p>
+          <p class="kicker">SK Admin · Barangay Bantug</p>
           <h1>KK Profiles</h1>
+          <p id="updated-at">Full records with private details. Handle with care.</p>
         </div>
-        <div class="form-actions">
-          <button class="btn btn-text" id="refresh-btn">Refresh</button>
-          <button class="btn btn-primary" id="export-btn">Download Excel (CSV)</button>
-          <button class="btn btn-text" id="logout-btn">Sign out</button>
+        <div class="form-actions" style="margin:0">
+          <button class="btn" id="refresh-btn">Refresh</button>
+          <button class="btn btn-yellow" id="export-btn">Download Excel (CSV)</button>
         </div>
       </div>
     </section>
 
-    <section class="stats" id="stats"></section>
+    <div class="wrap">
+      <section class="admin-tiles" id="stats"></section>
 
-    <section class="card">
-      <div class="filters">
-        <input id="f-search" type="search" placeholder="Search name or contact…" aria-label="Search">
-        <select id="f-purok" aria-label="Purok"><option value="">All puroks</option></select>
-        <select id="f-sex" aria-label="Sex"><option value="">All sexes</option><option value="M">Male</option><option value="F">Female</option></select>
-        <select id="f-class" aria-label="Youth classification">
-          <option value="">All classifications</option>
-          <option>In-school Youth</option><option>Out of School Youth</option><option>Working Youth</option><option>Unemployed</option>
-        </select>
-        <select id="f-voter" aria-label="Registered voter"><option value="">Voter: any</option><option>Yes</option><option>No</option></select>
-      </div>
-      <p class="muted small" id="f-count"></p>
-      <div class="table-wrap tall">
-        <table class="admin-table">
-          <thead>
-            <tr>
-              <th>#</th><th data-sort="lastName">Name</th><th data-sort="birthday">Birthday</th><th data-sort="age">Age</th>
-              <th data-sort="sex">Sex</th><th>Contact</th><th data-sort="civilStatus">Civil status</th>
-              <th data-sort="youthClass">Classification</th><th data-sort="voter">Voter</th><th data-sort="purok">Purok</th>
-              <th data-sort="timestamp">Registered</th>
-            </tr>
-          </thead>
-          <tbody id="a-body"></tbody>
-        </table>
-      </div>
-      <p class="muted small">To edit or delete a record, open the Google Sheet. Changes show here after Refresh.</p>
-    </section>
+      <section class="breakdowns">
+        <div class="panel"><h3>By purok</h3><div class="bars" id="bars-purok"></div></div>
+        <div class="panel"><h3>By youth classification</h3><div class="bars" id="bars-class"></div></div>
+      </section>
+
+      <section class="panel">
+        <div class="admin-filters toolbar">
+          <input id="f-search" type="search" placeholder="Search name or contact…" aria-label="Search">
+          <select id="f-purok" aria-label="Purok"><option value="">All puroks</option></select>
+          <select id="f-sex" aria-label="Sex"><option value="">All sexes</option><option value="M">Male</option><option value="F">Female</option></select>
+          <select id="f-class" aria-label="Youth classification">
+            <option value="">All classifications</option>
+            <option>In-school Youth</option><option>Out of School Youth</option><option>Working Youth</option><option>Unemployed</option>
+          </select>
+          <select id="f-voter" aria-label="Registered voter"><option value="">Voter: any</option><option>Yes</option><option>No</option></select>
+        </div>
+        <p class="small" style="margin:14px 0 10px"><span id="f-count" class="count-badge"></span></p>
+        <div class="table-wrap" style="max-height:70vh">
+          <table class="tbl admin-table">
+            <thead>
+              <tr>
+                <th>#</th><th data-sort="lastName">Name</th><th data-sort="birthday">Birthday</th><th data-sort="age">Age</th>
+                <th data-sort="sex">Sex</th><th>Contact</th><th data-sort="civilStatus">Civil status</th>
+                <th data-sort="youthClass">Classification</th><th data-sort="voter">Voter</th><th data-sort="purok">Purok</th>
+                <th data-sort="timestamp">Registered</th>
+              </tr>
+            </thead>
+            <tbody id="a-body"></tbody>
+          </table>
+        </div>
+        <p class="small muted" style="margin-top:12px">Click a column title to sort. To edit or delete a record, open the Google Sheet, then press Refresh.</p>
+      </section>
+    </div>
   </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      <span><b>BARANGAY BANTUG</b> · SK Admin</span>
+      <span>Private data — protected under RA 10173</span>
+    </div>
+  </footer>
 
   <script src="config.js"></script>
   <script src="admin.js"></script>
